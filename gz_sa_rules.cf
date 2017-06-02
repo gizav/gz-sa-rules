@@ -1,0 +1,855 @@
+#------------------------------------------------------------------------------
+# gz_sa_rules.cf - Handcrafted custom ruleset for spamassassin.
+#
+# Author...: Giovanni Zavan
+# Contact..: gizeta@programmer.net
+# Date.....: 02/06/2017
+# Version..: 1.0.0.0
+# Note.....: Please note that the rules might not suit your needs and may
+#            create false positive. Please test the rules in your environment
+#            before using them in production.
+#            Take care that some rules are exclusive to spam messages located
+#            in Italy.
+#            You are using these rules at your own risk.
+#------------------------------------------------------------------------------
+version_tag gz_sa_rules_1_0_0_0
+
+
+# Rule for block invoice's spam message
+#
+body		__GZ_INVOICE_A	/(Dear|Hello|Hi) [a-zA-Z]*\.[a-zA-Z]*,/i
+body		__GZ_INVOICE_B	/Please (find|see|check).* (attached|bill) .*(invoice|file|attachment)? (that is now due for payment|regarding clients recent bill|the confirmation of transaction)?/i
+body		__GZ_INVOICE_C	/(King|Best) Regards/i
+body		__GZ_INVOICE_D	/Vice President of Sales Marketing|Public (Affairs|Relations) Manager|(Sales|Financial) Director/i
+body        __GZ_INVOICE_E  /Please find attached the file we spoke about yesterday/i
+header      __GZ_INVOICE_F  Subject =~ /Re:/i
+meta		GZ_INVOICE_01	(__GZ_INVOICE_A && ((__GZ_INVOICE_B && __GZ_INVOICE_C && __GZ_INVOICE_D) || (__GZ_INVOICE_E && __GZ_INVOICE_F)))
+score		GZ_INVOICE_01	5.0
+describe	GZ_INVOICE_01	Invoice's spam message
+
+
+# Rule for block invoice's ita spam message
+#
+body        __GZ_INVOICE_G  /la password per aprire la fattura/i
+body        __GZ_INVOICE_H  /la fattura .* considerarsi originale/i
+uri         __GZ_INVOICE_J  /https:\/\/www\.dropbox\.com\/.*PDF\.zip.*/i
+header		__GZ_INVOICE_K	Subject =~ /fattura urgente non pagata/i
+body		__GZ_INVOICE_L	/come consueto le invio.*fattura/i
+body		__GZ_INVOICE_M	/stata controllata.*virus.*avast/i
+meta        GZ_INVOICE_02   (__GZ_INVOICE_G && __GZ_INVOICE_H && __GZ_INVOICE_J) || (__GZ_INVOICE_K && __GZ_INVOICE_L && __GZ_INVOICE_M)
+score       GZ_INVOICE_02   8.0
+describe    GZ_INVOICE_02   Invoice's italian spam message
+
+
+# Rule for block invoice's ita spam message
+#
+body        GZ_INVOICE_03	/fattur(e|a) .* (sono|è|é) .* in formato word/i
+score       GZ_INVOICE_03   5.0
+describe    GZ_INVOICE_03   Invoice italian spam message by WORD attachment
+
+
+# Rule for block italian message of enel phishing
+#
+body		__GZ_ENEL_PHISHING_TAG1		/enel servizio elettrico/i
+body		__GZ_ENEL_PHISHING_TAG2		/clicca qui per scaricare/i
+header		__GZ_ENEL_PHISHING_SENDER	From =~ /.*noreply\.enelservizioelettrico\@enel\.com/
+body		__GZ_ENEL_PHISHING_VALID_CF	/codice fiscale.*[A-Za-z]{6}[0-9]{2}[A-Za-z]{1}[0-9]{2}[A-Za-z]{1}[0-9]{3}[A-Za-z]{1}$/i
+meta		GZ_ENEL_PHISHING		((((__GZ_ENEL_PHISHING_TAG1 && __GZ_ENEL_PHISHING_TAG2) * 3) + (-1 * __GZ_ENEL_PHISHING_SENDER) + (-1 * __GZ_ENEL_PHISHING_VALID_CF)) > 0)
+score		GZ_ENEL_PHISHING		8.0
+describe	GZ_ENEL_PHISHING		GZ Enel phishing
+
+
+# Rule 01 for block financial spam
+#
+body		__GZ_FINANCIAL_PHISHING_01	/faktura proforma/i
+header		__GZ_FINANCIAL_PHISHING_02	Subject =~ /(RE|FW):.*Payment (accepted|declined|confirmation|reminder|successful|\#).*[0-9]{5,8}/i
+header		__GZ_FINANCIAL_PHISHING_03	Subject =~ /new payment terms and payment/i
+header		__GZ_FINANCIAL_PHISHING_04	Subject =~ /Last Payment Notice ID.*[0-9]{6,8}/i
+header		__GZ_FINANCIAL_PHISHING_05	Subject =~ /Daily Mail - Payment overdue/i
+header		__GZ_FINANCIAL_PHISHING_06	Subject =~ /PAYMENT CONFIRMATION/
+meta		GZ_FINANCIAL_PHISHING	((__GZ_FINANCIAL_PHISHING_01 + __GZ_FINANCIAL_PHISHING_02 + __GZ_FINANCIAL_PHISHING_03 + __GZ_FINANCIAL_PHISHING_04 + __GZ_FINANCIAL_PHISHING_05 + __GZ_FINANCIAL_PHISHING_06) > 0)
+score		GZ_FINANCIAL_PHISHING		1.0
+describe	GZ_FINANCIAL_PHISHING		GZ Financial phishing 01
+
+
+# Rule 02 for block financial spam
+#
+body		__GZ_FNCIAL_PHISH_01	/Ciao/i
+body		__GZ_FNCIAL_PHISH_02	/Che la.*pagamenti.*mese.*\./i
+body		__GZ_FNCIAL_PHISH_03	/Vi ricordo del vostro dovere a [0-9]+(,\.)?[0-9]? euro/i
+body		__GZ_FNCIAL_PHISH_04	/Si prega di pagare il piu presto possibile/i
+header		__GZ_FNCIAL_PHISH_05	Subject =~ /Re: Riconciliazione dei pagamenti/i
+meta		GZ_FINANCIAL_PHISHING2	(__GZ_FNCIAL_PHISH_01 && (__GZ_FNCIAL_PHISH_02 || __GZ_FNCIAL_PHISH_03 || __GZ_FNCIAL_PHISH_05) && __GZ_FNCIAL_PHISH_04) 
+score		GZ_FINANCIAL_PHISHING2	5.0
+describe	GZ_FINANCIAL_PHISHING2	GZ financial phishing 02
+
+
+# Rule 03 for block financial spam
+#
+body		__GZ_FNCIAL_PHISH_01A	/Gentile cliente,/i
+body		__GZ_FNCIAL_PHISH_02A	/ricevuta di pagamento per la fattura/i
+body		__GZ_FNCIAL_PHISH_03A	/Stato ordine: (Pagato|in giacenza)/i
+body		__GZ_FNCIAL_PHISH_04A	/controllare lo storico delle sue fatture/im
+body		__GZ_FNCIAL_PHISH_05A	/Ringraziandola per la fiducia/i
+meta		GZ_FINANCIAL_PHISHING3	(__GZ_FNCIAL_PHISH_01A && __GZ_FNCIAL_PHISH_02A && __GZ_FNCIAL_PHISH_03A && __GZ_FNCIAL_PHISH_04A && __GZ_FNCIAL_PHISH_05A)
+score		GZ_FINANCIAL_PHISHING3	3.0
+describe	GZ_FINANCIAL_PHISHING3	GZ financial phishing 03
+
+
+# Rule for obfuscation technique of SPAM into subject or body
+#
+body		__GZ_OBF_TECHNIQUE_1	/a\$\$|pu\$\$y|h00kup|p0rn|wh0res|G-sp0t|thr0at|b00ty|s00n|l00king/i
+body		__GZ_OBF_TECHNIQUE_2	/\$c(0|o)pa|sc0pa/i
+body		__GZ_OBF_TECHNIQUE_3	/bl(0|o)wj(0|o)b/i
+body		__GZ_OBF_TECHNIQUE_4	/m\@sturba/i
+body		__GZ_OBF_TECHNIQUE_5	/video xek/i
+body		__GZ_OBF_TECHNIQUE_6	/0rgasm|orgasm0/i
+body		__GZ_OBF_TECHNIQUE_7	/t0ni(g|\@)ht/i
+body		__GZ_OBF_TECHNIQUE_8	/lesbi\@n/i
+body		__GZ_OBF_TECHNIQUE_9	/\b(\@nal|an\@l|\@n\@l)\b/i
+body		__GZ_OBF_TECHNIQUE_10	/B\@ng (me|with)/i
+body		__GZ_OBF_TECHNIQUE_11	/\b((c|\()0(c|\()k|\(ock|co\(k|\(ul(o|0)|cul0|ca(zz|$$)0|(\(|c)(\*|u)m)\b/i
+body		__GZ_OBF_TECHNIQUE_12	/cazz(o|0) dur(0|o)|c\@zz(o|0) dur(0|o)/i
+body		__GZ_OBF_TECHNIQUE_13	/\b((Luv to)?f[-\.\$\?\d\%\^\(\)\*\+\!\@£&:;_=u]+(c|\)|\()k(ed)?)(buddy)?\b/i
+body		__GZ_OBF_TECHNIQUE_14	/\b((I|you).*\$+ex+)\b/i
+body		__GZ_OBF_TECHNIQUE_15	/l0ve|b0dy|h0rny|d00r|h0le/i
+body		__GZ_OBF_TECHNIQUE_16	/(\$|s)e(x|k)h(00|oo)kup/i 
+body		__GZ_OBF_TECHNIQUE_17	/\b((S|\$)ek|\$e+x+|\$e(ss|$$)(o|0)|(\$|S)x{2,}y?)\b/i
+meta		GZ_OBF_TECHNIQUE		(__GZ_OBF_TECHNIQUE_1 || __GZ_OBF_TECHNIQUE_2 || __GZ_OBF_TECHNIQUE_3 || __GZ_OBF_TECHNIQUE_4 || __GZ_OBF_TECHNIQUE_5 || __GZ_OBF_TECHNIQUE_6 || __GZ_OBF_TECHNIQUE_7 || __GZ_OBF_TECHNIQUE_8 || __GZ_OBF_TECHNIQUE_9 || __GZ_OBF_TECHNIQUE_10  || __GZ_OBF_TECHNIQUE_11 || __GZ_OBF_TECHNIQUE_12 || __GZ_OBF_TECHNIQUE_13 || __GZ_OBF_TECHNIQUE_14 || __GZ_OBF_TECHNIQUE_15 || __GZ_OBF_TECHNIQUE_16 || __GZ_OBF_TECHNIQUE_17)
+score		GZ_OBF_TECHNIQUE		8.0
+describe	GZ_OBF_TECHNIQUE		Obfuscation technique of sex spam
+
+
+# Rule for block message with italian hard porn words
+#
+body		__GZ_ITA_H_PORN_WORD1	/\b(figa|culo|tette|scopa(mi|rmi|rti)|(mio|tuo) *cazzo|cazzo duro|troia)\b/i
+body		__GZ_ITA_H_PORN_WORD2	/ingrandire .* pene/i
+body		__GZ_ITA_H_PORN_WORD3	/sfondaculo/i
+meta		GZ_ITA_H_PORN_WORD		__GZ_ITA_H_PORN_WORD1 || __GZ_ITA_H_PORN_WORD2 || __GZ_ITA_H_PORN_WORD3
+describe	GZ_ITA_H_PORN_WORD		Explicit italian's hard sex words
+score		GZ_ITA_H_PORN_WORD		10.0
+
+
+# Rule for block message with italian soft porn words
+#
+body		__GZ_ITA_S_PORN_WORDS_1	/\b(orgasmo|fare sesso|sex|scopare)\b/i
+body		__GZ_ITA_S_PORN_WORDS_2	/stupida cagna/i
+meta		GZ_ITA_S_PORN_WORDS		__GZ_ITA_S_PORN_WORDS_1 || __GZ_ITA_S_PORN_WORDS_2
+score		GZ_ITA_S_PORN_WORDS		0.5
+describe	GZ_ITA_S_PORN_WORDS		Explicit italian's soft sex words
+
+
+# Rule for block message with france porn phrases
+#
+body		GZ_FRA_PORN_WORDS		/\b(penis)\b/i
+describe	GZ_FRA_PORN_WORDS		Explicit france sex words
+score		GZ_FRA_PORN_WORDS		1.0
+
+
+# Rule for block message with france porn phrases
+#
+body		__GZ_FRA_PORN_PHRASE1	/\b(de ton vagin|vos fantasmes les plus sales|Mon vagin|Rever le sexe|Je veux vas te faire encule)\b/i
+body		__GZ_FRA_PORN_PHRASE2	/b(bon sexe est si important pour moi|Voulez-vous le sexe)\b/i
+meta		GZ_FRA_PORN_PHRASE		(__GZ_FRA_PORN_PHRASE1 || __GZ_FRA_PORN_PHRASE2)
+describe	GZ_FRA_PORN_PHRASE		Explicit france sex phrases
+score		GZ_FRA_PORN_PHRASE		10.0
+
+
+# Rule for block message with explicit phrase or word of sex
+#
+body		__GZ_EXPLICIT_SEX_01	/.* tits .*bra/i
+body		__GZ_EXPLICIT_SEX_02	/The dirtiest request from a filthiest mature/i
+body		__GZ_EXPLICIT_SEX_03	/horny virgin/i
+body		__GZ_EXPLICIT_SEX_04	/\bSnapBangMsg\b/i
+body		__GZ_EXPLICIT_SEX_05	/girls one boy/i
+body		__GZ_EXPLICIT_SEX_06	/Bang with An adroit mother/i
+body		__GZ_EXPLICIT_SEX_07	/Dirty talk/i
+body		__GZ_EXPLICIT_SEX_08	/Nudes sharing request/i
+body		__GZ_EXPLICIT_SEX_09	/Lei ha perduto un avviso video xek/i
+body		__GZ_EXPLICIT_SEX_10	/Shower blowjob request/i
+body		__GZ_EXPLICIT_SEX_11	/Make me scream and c(\*|u)m/i
+body		__GZ_EXPLICIT_SEX_12	/in my pink z(0|o)ne/i
+body		__GZ_EXPLICIT_SEX_13	/\bSex(Hookup|tourist)\b/i
+body		__GZ_EXPLICIT_SEX_14	/Love to f(u|\*)ck/i
+body		__GZ_EXPLICIT_SEX_15	/UnansweredH(oo|00)kup/i
+body		__GZ_EXPLICIT_SEX_16	/conoscenze private/i
+body		__GZ_EXPLICIT_SEX_17	/donne sposate/i
+body		__GZ_EXPLICIT_SEX_18	/studentesse amabili/i
+body		__GZ_EXPLICIT_SEX_19	/vicine sole/i
+body		__GZ_EXPLICIT_SEX_20	/club .* (sesso|sessuale)/i
+body		__GZ_EXPLICIT_SEX_21	/donne .* calde/i
+body		__GZ_EXPLICIT_SEX_22	/fighe umide/i
+body		__GZ_EXPLICIT_SEX_23	/sexual club/i
+meta		GZ_EXPLICIT_SEX			((__GZ_EXPLICIT_SEX_01 + __GZ_EXPLICIT_SEX_02 + __GZ_EXPLICIT_SEX_03 + __GZ_EXPLICIT_SEX_04 + __GZ_EXPLICIT_SEX_05 + __GZ_EXPLICIT_SEX_06 +__GZ_EXPLICIT_SEX_07 + __GZ_EXPLICIT_SEX_08 + __GZ_EXPLICIT_SEX_09 + __GZ_EXPLICIT_SEX_10 + __GZ_EXPLICIT_SEX_11 + __GZ_EXPLICIT_SEX_12 + __GZ_EXPLICIT_SEX_13 + __GZ_EXPLICIT_SEX_14 + __GZ_EXPLICIT_SEX_15 + (__GZ_EXPLICIT_SEX_16 * 0.5) + __GZ_EXPLICIT_SEX_17 + __GZ_EXPLICIT_SEX_18 + __GZ_EXPLICIT_SEX_19 + __GZ_EXPLICIT_SEX_20 + __GZ_EXPLICIT_SEX_21 + __GZ_EXPLICIT_SEX_22 + __GZ_EXPLICIT_SEX_23) > 0 )
+score		GZ_EXPLICIT_SEX			6.0
+describe	GZ_EXPLICIT_SEX			Explicit sex phrases
+
+
+# Rule for soft dating message
+#
+body		__GZ_SOFT_DATING1	/girl next d(oo|00)r/i
+body		__GZ_SOFT_DATING2	/(ciao|lieta).*(cittadina|residente|vivo).*Rus/i
+body		__GZ_SOFT_DATING3	/ciao dolcezza .* uomini intriganti/i
+body		__GZ_SOFT_DATING4	/say hello .* dating.*chat/i
+body		__GZ_SOFT_DATING5	/casalinga .* amante/i
+body		__GZ_SOFT_DATING6	/ragazza .* lingerie .* pizzo/i
+meta		GZ_SOFT_DATING		(__GZ_SOFT_DATING1 || __GZ_SOFT_DATING2 || __GZ_SOFT_DATING3  || __GZ_SOFT_DATING4 || __GZ_SOFT_DATING5 || __GZ_SOFT_DATING6)
+score		GZ_SOFT_DATING		2.0
+describe	GZ_SOFT_DATING		Possible dating or sex message
+
+
+# Rule for italian hard dating message
+#
+body		__GZ_HARD_DATING1	/Ciao.* Il mio nome e .*una cittadina della Russland/i
+body		__GZ_HARD_DATING2	/Lieta di darvi il mio caro sconosciuto. Sono .*, residente Russland/i
+body		__GZ_HARD_DATING3	/mi chiamo .* vivo in Rus/i
+body		__GZ_HARD_DATING4	/Tutti intorno a te fanno sesso/i
+body		__GZ_HARD_DATING5	/fig(he|a) umid(e|a)/i
+body		__GZ_HARD_DATING6	/wet pu(ss|\$\$)y/i
+body		__GZ_HARD_DATING7	/(partner|ragazzo|uomo) per il sesso/i
+body		__GZ_HARD_DATING8	/con un gran cazzo/i
+body		__GZ_HARD_DATING9	/casalinga.*cerca amante/i
+body		__GZ_HARD_DATING10	/sono una troia amante del sesso/i
+body		__GZ_HARD_DATING11	/donne .* calde/i
+body		__GZ_HARD_DATING12	/Vogliono da te soltanto il sesso/i
+body		__GZ_HARD_DATING13	/senza un uomo forte/i
+body		__GZ_HARD_DATING14	/io e un bicchiere di vino ovviamente/i
+body		__GZ_HARD_DATING15	/mi faccia compagnia a letto/i
+body		__GZ_HARD_DATING16	/registrazione per il sesso/i
+body		__GZ_HARD_DATING17	/eroe .* sogni erotici/i
+body		__GZ_HARD_DATING18	/gratis.*sexy.*sesso/i
+body		__GZ_HARD_DATING19	/ragazzo per il sesso/i
+body		__GZ_HARD_DATING20	/ragazzo amabile/i
+body		__GZ_HARD_DATING21	/(ragazze|donne) .*(cercano|vogliono) .*(amante|uomo|ragazzo)/i
+meta		GZ_HARD_DATING		(__GZ_HARD_DATING1 || __GZ_HARD_DATING2 || __GZ_HARD_DATING3 || __GZ_HARD_DATING4  || __GZ_HARD_DATING5 || __GZ_HARD_DATING6 || __GZ_HARD_DATING7 || __GZ_HARD_DATING8 || __GZ_HARD_DATING9 || __GZ_HARD_DATING10 || __GZ_HARD_DATING11 || __GZ_HARD_DATING12 || __GZ_HARD_DATING13 || __GZ_HARD_DATING14 || __GZ_HARD_DATING15 || __GZ_HARD_DATING16 || __GZ_HARD_DATING17 || __GZ_HARD_DATING18 || __GZ_HARD_DATING19 || __GZ_HARD_DATING20 || __GZ_HARD_DATING21)
+score		GZ_HARD_DATING		5.0
+describe	GZ_HARD_DATING		GZ High possibility for italian dating message
+
+
+# Rule for russland dating message
+#
+body		__GZ_RUSSLAND_DATING1	/Ciao.* (sono|mio nome|mi chiamo) .* (residente|vivo) .* Rus/i
+body		__GZ_RUSSLAND_DATING2	/Lieta .* (sono|mio nome|mi chiamo) .* (residente|vivo) .* Rus/i
+body		__GZ_RUSSLAND_DATING3	/mi chiamo .* (vivo|residente) .* Rus/i
+body		__GZ_RUSSLAND_DATING4	/My name is .* and I from Russ(ia|land)/i
+meta		GZ_RUSSLAND_DATING		(__GZ_RUSSLAND_DATING1 || __GZ_RUSSLAND_DATING2 || __GZ_RUSSLAND_DATING3 || __GZ_RUSSLAND_DATING4)
+score		GZ_RUSSLAND_DATING		5.0
+describe	GZ_RUSSLAND_DATING		GZ High possibility for russian dating message
+
+
+# Rule for ukraine dating message
+#
+body		__GZ_UKRE_DATING1	/ukraine bride/i
+body		__GZ_UKRE_DATING2	/search the second half/i
+body		__GZ_UKRE_DATING3	/looking for/i
+uri			__GZ_UKRE_DATING4	/https:\/\/goo\.gl\/.*/i
+meta		GZ_UKRE_DATING		(__GZ_UKRE_DATING1 && (__GZ_UKRE_DATING2 || __GZ_UKRE_DATING3) && __GZ_UKRE_DATING4)
+score		GZ_UKRE_DATING		10.0
+describe	GZ_UKRE_DATING		GZ generic Ukraine dating spam
+
+
+# From ru AND ukraine dating message
+#
+header		__GZ_FROM_RU_DATING1	From =~ /@.*\.ru/i
+meta		GZ_FROM_RU_DATING	GZ_UKRE_DATING && __GZ_FROM_RU_DATING1
+score		GZ_FROM_RU_DATING	10.0
+describe	GZ_FROM_RU_DATING	GZ from Ukraine dating spam
+
+
+# Rule for international hard dating message
+#
+body		__GZ_HARD_ENG_DATING1	/searching for lovers of both sexes/i
+body		__GZ_HARD_ENG_DATING2	/Pretty hot girl is looking for a sponsor/i
+body		__GZ_HARD_ENG_DATING3	/Looking for a man that can satisfy me/i
+body		__GZ_HARD_ENG_DATING4	/See my profile.*refuse to bang me/i
+meta		GZ_HARD_ENG_DATING		(__GZ_HARD_ENG_DATING1 || __GZ_HARD_ENG_DATING2 || __GZ_HARD_ENG_DATING3 || __GZ_HARD_ENG_DATING4)
+score		GZ_HARD_ENG_DATING		5.0
+describe	GZ_HARD_ENG_DATING		High possibility for dating message
+
+
+# Rules for italian meeting message
+#
+body		__GZ_MEETING1		/iscritta .* sito d.*incontri/i
+body		__GZ_MEETING2		/registrazione .* sito delle conoscenze private/i
+body		__GZ_MEETING3		/(e|lei) +(fare|vuole) sesso/i
+body		__GZ_MEETING4		/Sei pronto per conoscere single attraenti vicini a te/i
+body		__GZ_MEETING5		/ISCRIVITI e rimorchia SUBITO/i
+body		__GZ_MEETING6		/(Single|Iscritti) *SEXY/i
+body		__GZ_MEETING7		/Ragazze disinibite/i
+body		__GZ_MEETING8		/cerco .* uomo per .* ?amore/i
+body		__GZ_MEETING9		/conoscere .* (donn(a|e)|ragazz(a|e)) (amabil(e|i)|sexy|voglios(a|e)|bellissim(a|e))/i
+meta		GZ_MEETING			(__GZ_MEETING1 || __GZ_MEETING2 || __GZ_MEETING3 || __GZ_MEETING4 || __GZ_MEETING5 || __GZ_MEETING6 || __GZ_MEETING7 || __GZ_MEETING8 || __GZ_MEETING9)
+score		GZ_MEETING			5.0
+describe	GZ_MEETING			Message from a website of meeting/dating
+
+
+# Rules for italian hard dating message
+#
+body		__GZ_ITA_HARD_DATING_1		/sua ancheta/i
+meta		GZ_ITA_HARD_DATING			__GZ_ITA_HARD_DATING_1 && GZ_MEETING
+score		GZ_ITA_HARD_DATING			8.0
+describe	GZ_ITA_HARD_DATING			GZ message of hard dating
+
+
+# Rules for subject with dating message
+#
+header		__GZ_SBJ_DATING1	Subject =~ /Tutti stanno rimorchiando/i
+header		__GZ_SBJ_DATING2	Subject =~ /Ti senti solo\?/i
+header		__GZ_SBJ_DATING3	Subject =~ /Ti aspetta il prossimo appuntamento/i
+header		__GZ_SBJ_DATING4	Subject =~ /Eccitato\? Vuo(l|i) fare sesso\?/i
+header		__GZ_SBJ_DATING5	Subject =~ /sei così caliente/i
+header		__GZ_SBJ_DATING6	Subject =~ /Guarda che .* una persona che vuole chattare con te/i
+header		__GZ_SBJ_DATING7	Subject =~ /Ti aspetta il prossimo appuntamento/i
+header		__GZ_SBJ_DATING8	Subject =~ /Sei pronto per l*AMORE/i
+header		__GZ_SBJ_DATING9	Subject =~ /Non devi passare un*altra sera in solitudine/i
+header		__GZ_SBJ_DATING10	Subject =~ /Ti senti solo\?/i
+header		__GZ_SBJ_DATING11	Subject =~ /Sei incredibilmente attraente/i
+header		__GZ_SBJ_DATING12	Subject =~ /Hey\.* fai in fretta\!/i
+header		__GZ_SBJ_DATING13	Subject =~ /Hai un bellissimo sorriso/i
+header		__GZ_SBJ_DATING14	Subject =~ /conoscenza con un uomo per il sesso/i
+header		__GZ_SBJ_DATING15	Subject =~ /sono pronta di essere la tua schiava/i
+header		__GZ_SBJ_DATING16	Subject =~ /ragazzo capac+e di soddisfarmi/i
+header		__GZ_SBJ_DATING17	Subject =~ /ti piace fare jiggy-jiggy/i
+header		__GZ_SBJ_DATING18	Subject =~ /Une femme .* c'est ta femme/i
+header		__GZ_SBJ_DATING19	Subject =~ /conoscenza .* sesso/i
+header		__GZ_SBJ_DATING20	Subject =~ /cerco .* uomo per .* amore/i
+meta		GZ_SBJ_DATING		(__GZ_SBJ_DATING1 || __GZ_SBJ_DATING2 || __GZ_SBJ_DATING3 || __GZ_SBJ_DATING4 || __GZ_SBJ_DATING5 || __GZ_SBJ_DATING6 || __GZ_SBJ_DATING7 || __GZ_SBJ_DATING8 || __GZ_SBJ_DATING9 || __GZ_SBJ_DATING10 || __GZ_SBJ_DATING11 || __GZ_SBJ_DATING12 || __GZ_SBJ_DATING13 || __GZ_SBJ_DATING14 || __GZ_SBJ_DATING15 || __GZ_SBJ_DATING16 || __GZ_SBJ_DATING17 || __GZ_SBJ_DATING18 || __GZ_SBJ_DATING19  || __GZ_SBJ_DATING20)
+score		GZ_SBJ_DATING		5.0
+describe	GZ_SBJ_DATING		Subject used for spam message
+
+
+# Rules with list of url used by spammer
+#
+uri			__GZ_URI_BL1		/http:\/\/dramaticaccent\.com/
+uri			__GZ_URI_BL2		/http:\/\/matefind\.review/
+uri			__GZ_URI_BL3		/http:\/\/phair1.com/
+uri			__GZ_URI_BL4		/http:\/\/tmp.przedborz\.net/
+uri			__GZ_URI_BL5		/http:\/\/southwestadvertisinghalloffame\.org/
+uri			__GZ_URI_BL6		/http:\/\/vapourline\.com/
+uri			__GZ_URI_BL7		/http:\/\/traceywalkeronline\.com/
+uri			__GZ_URI_BL8		/http:\/\/foambuddy\.com/
+uri			__GZ_URI_BL9		/http:\/\/pathflow\.co/
+uri			__GZ_URI_BL10		/http:\/\/formeetlove\.cn\.com/
+uri			__GZ_URI_BL11		/http:\/\/iraninfotech\.com/
+uri			__GZ_URI_BL12		/http:\/\/civilwarphoto\.org/
+uri			__GZ_URI_BL13		/http:\/\/sodepalsa\.com/		
+uri			__GZ_URI_BL14		/http:\/\/kleintjesgoed\.be/		
+uri			__GZ_URI_BL15		/http:\/\/bluefoxconsulting\.com/		
+uri			__GZ_URI_BL16		/http:\/\/funderwoman\.com/
+uri			__GZ_URI_BL17		/http:\/\/hotelwoodlandsomnath\.com/
+uri			__GZ_URI_BL18		/http:\/\/gleamwang\.com/
+uri			__GZ_URI_BL19		/http:\/\/vfbobertuerkheim-frauen\.de/
+uri			__GZ_URI_BL20		/http:\/\/kiss-club\.review/
+uri			__GZ_URI_BL21		/http:\/\/koelbl-automobile\.de/
+uri			__GZ_URI_BL22		/http:\/\/vitetviet\.com/
+uri			__GZ_URI_BL23		/http:\/\/allbestcards\.com/
+uri			__GZ_URI_BL24		/http:\/\/ifie\.org/
+uri			__GZ_URI_BL25		/http:\/\/skfest\.sk/
+uri			__GZ_URI_BL26		/http:\/\/blog\.ads2book\.com/
+uri			__GZ_URI_BL27		/http:\/\/.*xincontro\.com/
+uri			__GZ_URI_BL28		/http:\/\/.*quello-che-desidero.*/
+uri			__GZ_URI_BL29		/http:\/\/www\.soluzionando\.com.*/
+meta		GZ_URI_BL			(__GZ_URI_BL1 || __GZ_URI_BL2 || __GZ_URI_BL3 || __GZ_URI_BL4 || __GZ_URI_BL5 || __GZ_URI_BL6 || __GZ_URI_BL7 || __GZ_URI_BL8 || __GZ_URI_BL9 || __GZ_URI_BL10 || __GZ_URI_BL11 || __GZ_URI_BL12 || __GZ_URI_BL13 || __GZ_URI_BL14 || __GZ_URI_BL15 || __GZ_URI_BL16 || __GZ_URI_BL17 || __GZ_URI_BL18 || __GZ_URI_BL19 || __GZ_URI_BL20 || __GZ_URI_BL21 || __GZ_URI_BL22 || __GZ_URI_BL23 || __GZ_URI_BL24 || __GZ_URI_BL25 || __GZ_URI_BL26 || __GZ_URI_BL27 || __GZ_URI_BL28 || __GZ_URI_BL29)
+score		GZ_URI_BL			2.0
+describe	GZ_URI_BL			Message contain an url used for spamming
+
+
+# Rule for generic scammer spam
+#
+body		__GZ_SCAM_SPAM_01		/Hi my name is .*,.*from.*/i
+uri			__GZ_SCAM_SPAM_02		m!http://.*\.(ru|fr)/.*!i
+body		__GZ_SCAM_SPAM_03		/just broke up with my BF and .* feeling really/i
+body		__GZ_SCAM_SPAM_04		/(visit my profile|Please look .* photo)/i
+meta		GZ_SCAM_RU_SPAM			((__GZ_SCAM_SPAM_01 || __GZ_SCAM_SPAM_03) && __GZ_SCAM_SPAM_02 && __GZ_SCAM_SPAM_04)
+score		GZ_SCAM_RU_SPAM			3.0
+describe	GZ_SCAM_RU_SPAM			Generic spam of scammer girl
+
+
+# Rule for block message with soft phrases of sex
+#
+body		GZ_SOFT_SEX	/(how to turn you on|mindblowing|My body is sensational|Undress me with your eyes|Sweet Affair With a Girl Next Door)/i
+score		GZ_SOFT_SEX	3.0
+describe	GZ_SOFT_SEX	Soft sex phrases
+
+
+# Starting greetings with part of email address
+#
+body            __GZ_GEN_GREET1         /(Gentile|Dear|Hello|Hi|Ciao) [a-z,0-9,_]+(\.|\@)[a-z,0-9,\.,_]+(,|:)/i
+body            __GZ_GEN_GREET2         /Gentile Sig\.\/Sig\.ra(,|:)/i
+body            __GZ_GEN_GREET3         /Dear (Mr\/Mrs|Madam|Sir|Miss)(,|:)/i
+body            __GZ_GEN_GREET4         /Ciao (caro|amico){1} *(caro|amico)?(,|:|!)?/i
+body            __GZ_GEN_GREET5         /Dear (Client|Friend|Customer)/i
+body            __GZ_GEN_GREET6         /Caro (Cliente|Amico)/i
+meta            GZ_GENERIC_GREETINGS    (__GZ_GEN_GREET1 || __GZ_GEN_GREET2 || __GZ_GEN_GREET3 || __GZ_GEN_GREET4 || __GZ_GEN_GREET5 || __GZ_GEN_GREET6)
+score           GZ_GENERIC_GREETINGS    0.50
+describe        GZ_GENERIC_GREETINGS    Message with a generic greetings
+
+
+# Rule for block messages of Paypal phishing
+#
+header          __GZ_PAYPAL_PHISHING_FROM               From =~ /.*\@e?\.paypal\.(it|com)/
+header          __GZ_PAYPAL_PHISHING_ATTACHMENT         Content-Type =~ /multipart\/mixed/
+header			__GZ_PAYPAL_PHISHING_TO					To =~ /paypal\@e\.paypal\.(it|com)/
+body            __GZ_PAYPAL_PHISHING_CREDITCARD         /conferma la tua carta di credito/i
+body            __GZ_PAYPAL_TAG         		/Paypal/i
+meta            GZ_PAYPAL_PHISHING                      (((__GZ_PAYPAL_PHISHING_FROM * -1) + (__GZ_PAYPAL_PHISHING_ATTACHMENT * 2) + (__GZ_PAYPAL_PHISHING_CREDITCARD * 2) + (__GZ_PAYPAL_PHISHING_TO * 2) > 1) && __GZ_PAYPAL_TAG)
+score           GZ_PAYPAL_PHISHING              5.0
+describe        GZ_PAYPAL_PHISHING              GZ Paypal phishing
+
+
+# Rule for block messages of Fedex phishing
+#
+body 		__GZ_FEDEX_A	/presentato l.allegato di questa mail/i
+body 		__GZ_FEDEX_B	/Back Line Agent Fedex|Fedex Italy/i
+body 		__GZ_FEDEX_C	/(Numero Tracciamento Postale|Numero collo)/i
+body		__GZ_FEDEX_D	/Stato: (IN ATTESA CONSEGNA|IN GIANCENZA)/i
+header		__GZ_FEDEX_E	Subject =~ /tracking for .*\@.*/i
+body		__GZ_FEDEX_F	/find enclosed below .* Fedex/i
+meta 		GZ_FEDEX_PSH	(__GZ_FEDEX_A && __GZ_FEDEX_B && __GZ_FEDEX_C && __GZ_FEDEX_D) || (__GZ_FEDEX_E && __GZ_FEDEX_F)
+score		GZ_FEDEX_PSH	5.0
+describe 	GZ_FEDEX_PSH	GZ Fedex phishing
+
+
+# Rule for block message of Equitalia phishing
+#
+body		__GZ_EQITA_A		/Agente della Risc?ossione/i
+body		__GZ_EQITA_B		/Equitalia/i
+body		__GZ_EQITA_C		/\bScarica il documento\b/i
+body		__GZ_EQITA_D		/pagamento/i
+body		__GZ_EQITA_E		/casa comunale del comune/i
+header		__GZ_EQITA_F		From =~ /(multe|autorizzata|pagamenti|pagam+ento|web|\d*|info|cifre|assistenza|fatture|equitalia|servizio|noreply|servizio_clienti|support|fatture){1}[\w,\d,\-,_,\$,%,&]*\@(sanzioni|equitalia|gruppoequitalia|eq|unicredit|poste|update|avvia|postecert|riscossioni|raccomandata|protocol|certificazione|equitaliaroma|legge|bancoposta|postepay|pec|bcca|bcpp|cse|equitaliaspa|legalmail|venetobanca|unipol|fatture-gruppoequitalia)\.(it|online)/i
+meta		GZ_EQITA_PHISHING	(((__GZ_EQITA_A * 2) + (__GZ_EQITA_E * 2) + __GZ_EQITA_F + __GZ_EQITA_B + __GZ_EQITA_D) > 2) && __GZ_EQITA_C
+score		GZ_EQITA_PHISHING	5.0
+describe	GZ_EQITA_PHISHING	GZ Equitalia phishing
+
+
+# Rule for block message of SDA phishing
+#
+header		__GZ_SDAITA_FROM	From =~ /\@sda\.it/i
+header		__GZ_SDAITA_FROM_1	From =~ /SDA Express Courier/i
+header		__GZ_SDAITA_SBJ		Subject =~ /pacchetto non consegnat(a|o) per voi/i
+header		__GZ_SDAITA_SBJ_1	Subject =~ /si dispone di una spedizione/i
+body		__GZ_SDAITA_A		/Corriere non ha espresso un pacco per te/i
+body		__GZ_SDAITA_B		/Sda Express| SDA /i
+body		__GZ_SDAITA_C		/Scarica etichetta di spedizione/i
+body		__GZ_SDAITA_D		/chiedere un (risarcimento|pagamento)/
+meta		GZ_SDAITA_PHISHING	(!__GZ_SDAITA_FROM || __GZ_SDAITA_FROM_1) && (__GZ_SDAITA_SBJ || __GZ_SDAITA_SBJ_1) && (__GZ_SDAITA_A && __GZ_SDAITA_B && __GZ_SDAITA_C && __GZ_SDAITA_D)
+score		GZ_SDAITA_PHISHING	10.0
+describe	GZ_SDAITA_PHISHING	GZ SDA Express phishing
+	
+
+# Rules for block message of canone RAI
+#
+header		__GZ_RAI_PHISHING_FR	From =~ /\@postacertificatarai\.it/i
+body		__GZ_RAI_PHISHING_E	/199\.123\.000/
+meta		GZ_RAI_PHISHING		(__GZ_RAI_PHISHING_FR || __GZ_RAI_PHISHING_E)
+score		GZ_RAI_PHISHING		2.5
+describe	GZ_RAI_PHISHING		GZ RAI phishing 01
+
+
+body		__GZ_RAI_PHISHING_A	/Canone Rai .* ultimo sollecito di pagamento/i
+body		__GZ_RAI_PHISHING_B	/canone speciale/i
+body		__GZ_RAI_PHISHING_C	/Scarica la fattura/i
+body		__GZ_RAI_PHISHING_D	/invitiamo ad effettuare il relativo (versamento|pagamento) entro 48h/i
+meta		GZ_RAI_PHISHING2	(__GZ_RAI_PHISHING_A && __GZ_RAI_PHISHING_B && __GZ_RAI_PHISHING_C && __GZ_RAI_PHISHING_D)
+score		GZ_RAI_PHISHING2	5.0
+describe	GZ_RAI_PHISHING2	GZ RAI phishing 02
+
+
+# Generic spam phrases
+#
+header		__GZ_DELIVERY_SPAM1		Subject =~ /RE:/i
+body		__GZ_DELIVERY_SPAM2		/Your package has been successfully delivered/i
+body		__GZ_DELIVERY_SPAM3		/\(TRK:[0-9]+\) is enclosed down below/i
+header		__GZ_DELIVERY_SPAM4		Subject =~ /Completa la tua registrazione/i
+body		__GZ_DELIVERY_SPAM5		/ricevuto un coupon/i
+body		__GZ_DELIVERY_SPAM6		/scaricare l.allegato/i
+meta		GZ_DELIVERY_SPAM		((GZ_DELIVERY_SPAM1 && GZ_DELIVERY_SPAM2 && __GZ_DELIVERY_SPAM3) || (GZ_DELIVERY_SPAM4 && GZ_DELIVERY_SPAM5 && __GZ_DELIVERY_SPAM6))
+score		GZ_DELIVERY_SPAM		4.0
+describe	GZ_DELIVERY_SPAM		Generic delivery spam message
+
+
+# BRT phishing
+#
+header		__GZ_BRT_PHISHING_1		Subject =~ /Il tuo ID e stato usato/i
+body		__GZ_BRT_PHISHING_2		/BRT.*Avviso affidamento spedizione [0-9]+/i
+body		__GZ_BRT_PHISHING_3		/relativamente ai servizi offerti da BRT si colleghi/i
+body		__GZ_BRT_PHISHING_4		/Cordiali saluti BRT Corriere Espresso/i
+meta		GZ_BRT_PHISHING			(__GZ_BRT_PHISHING_1 && __GZ_BRT_PHISHING_2 && __GZ_BRT_PHISHING_3 && __GZ_BRT_PHISHING_4)
+score		GZ_BRT_PHISHING			5.0
+describe	GZ_BRT_PHISHING			GZ BRT phishing
+
+
+# Credit card CartaSi phishing
+#
+header		__GZ_CCARD_PHISHING_1	Subject =~ /Notifica Importante/i
+body		__GZ_CCARD_PHISHING_2	/La sua carta è stata disattivata/i
+body		__GZ_CCARD_PHISHING_3	/troppi tentativi di pagamento/i
+body		__GZ_CCARD_PHISHING_4	/La invitiamo a cliccare sul link qui sotto/i
+body		__GZ_CCARD_PHISHING_5	/Dipartimento di Sicurezza CartaSi/i
+meta		GZ_CCARD_PHISHING		(__GZ_CCARD_PHISHING_1 && __GZ_CCARD_PHISHING_2 && __GZ_CCARD_PHISHING_3 && __GZ_CCARD_PHISHING_4 && __GZ_CCARD_PHISHING_5)
+score		GZ_CCARD_PHISHING		5.0
+describe	GZ_CCARD_PHISHING		GZ CartaSi phishing
+
+
+# Fake password changed
+#
+header		__GZ_CHG_PASSW_FAKE_1	Subject =~ /Prova gratuita 30 giorni/i
+body		__GZ_CHG_PASSW_FAKE_2	/abbiamo registrato un cambio di password sul suo account/i
+body		__GZ_CHG_PASSW_FAKE_3	/Il team di ROL/i
+body		__GZ_CHG_PASSW_FAKE_4	/non ha operato cambi di account/i
+body		__GZ_CHG_PASSW_FAKE_5	/sospetta di operazioni illecite/i
+body		__GZ_CHG_PASSW_FAKE_6	/provvederemo noi a contattarla/i
+meta		GZ_CHG_PASSW_FAKE		(__GZ_CHG_PASSW_FAKE_1 && __GZ_CHG_PASSW_FAKE_2 && __GZ_CHG_PASSW_FAKE_3 && __GZ_CHG_PASSW_FAKE_4 && __GZ_CHG_PASSW_FAKE_5 && __GZ_CHG_PASSW_FAKE_6)
+score		GZ_CHG_PASSW_FAKE		5.0
+describe	GZ_CHG_PASSW_FAKE		GZ fake password changed
+
+
+# WhatsApp phishing
+#
+header		__GZ_WHAPP_PHISHING_1	Subject =~ /tuo WhatsApp Messenger .* scaduto/i
+header		__GZ_WHAPP_PHISHING_1B	Subject =~ /tuo account .* scaduto WhatsApp Messenger/i
+body		__GZ_WHAPP_PHISHING_2	/WhatsApp Messenger 0(,|\.)99 euro/i
+body		__GZ_WHAPP_PHISHING_3	/Si prega di rinnovare il .* presto possibile/i
+body		__GZ_WHAPP_PHISHING_4	/whatsapp\.com \d{4} (All rights reserved|Tutti i diritti riservati)?/i
+body		__GZ_WHAPP_PHISHING_5	/rinnova il tuo WhatsApp Messenger/i
+meta		GZ_WHAPP_PHISHING		(__GZ_WHAPP_PHISHING_1 + __GZ_WHAPP_PHISHING_1B + __GZ_WHAPP_PHISHING_2 + __GZ_WHAPP_PHISHING_3 + __GZ_WHAPP_PHISHING_4 + __GZ_WHAPP_PHISHING_5) > 2
+score		GZ_WHAPP_PHISHING		5.0
+describe	GZ_WHAPP_PHISHING		GZ whatsapp phishing
+
+
+# Generic spam 1
+#
+header		__GZ_GENERIC_SPAM_1		Subject =~ /Fw: new message/i
+body		__GZ_GENERIC_SPAM_2		/Open message/i
+meta		GZ_GENERIC_SPAM_1		(__GZ_GENERIC_SPAM_1 && __GZ_GENERIC_SPAM_2)
+score		GZ_GENERIC_SPAM_1		2.0
+describe	GZ_GENERIC_SPAM_1		GZ generic forward message spam
+
+
+# Generic spam 2
+#
+header		__GZ_GENERIC_SPAM_21		Subject =~ /Confermare carta codici/i
+body		__GZ_GENERIC_SPAM_22		/abbiamo sospeso il suo acceso/i
+body		__GZ_GENERIC_SPAM_23		/deve riconfermare i suoi dati/i
+body		__GZ_GENERIC_SPAM_24		/reinserire i vostri dati alla seguiente/i
+body		__GZ_GENERIC_SPAM_25		/Processo di verifica/i
+meta		GZ_GENERIC_SPAM_2		(__GZ_GENERIC_SPAM_21 && __GZ_GENERIC_SPAM_22 && __GZ_GENERIC_SPAM_23 && __GZ_GENERIC_SPAM_24 && __GZ_GENERIC_SPAM_25)
+score		GZ_GENERIC_SPAM_2		3.0
+describe	GZ_GENERIC_SPAM_2		GZ generic message spam 2
+
+
+# Generic spam 3
+#
+header		__GZ_GENERIC_SPAM_31	Subject =~ /pdf in allegato/i
+body		__GZ_GENERIC_SPAM_32	/quanto puoi guadagnare/i
+body		__GZ_GENERIC_SPAM_33	/training gratuito/i
+body		__GZ_GENERIC_SPAM_34	/svolta alla tua vita/i
+meta		GZ_GENERIC_SPAM_3		(__GZ_GENERIC_SPAM_31 && __GZ_GENERIC_SPAM_32 && __GZ_GENERIC_SPAM_33 && __GZ_GENERIC_SPAM_34)
+score		GZ_GENERIC_SPAM_3		5.0
+describe	GZ_GENERIC_SPAM_3		GZ generic message spam 3
+
+
+# Generic spam 4
+#
+header		__GZ_GENERIC_SPAM_41	From =~ /^ *router.*switch/i
+header		__GZ_GENERIC_SPAM_42	To =~ /^ *friend/i
+header		__GZ_GENERIC_SPAM_43	Subject =~ /dear friend/i
+meta		GZ_GENERIC_SPAM_4		(__GZ_GENERIC_SPAM_41 && __GZ_GENERIC_SPAM_42 && __GZ_GENERIC_SPAM_43)
+score		GZ_GENERIC_SPAM_4		5.0
+describe	GZ_GENERIC_SPAM_4		GZ generic spam 4
+
+
+# Generic spam 5
+#
+header		__GZ_GENERIC_SPAM_51	Subject =~ /pre-xmas/i
+header		__GZ_GENERIC_SPAM_52	Subject =~ /sale/i
+header		__GZ_GENERIC_SPAM_53	Subject =~ /save .* \d{2}%/i
+header		__GZ_GENERIC_SPAM_54	Subject =~ /\d{2}\% *OFF for Xmas/i
+meta		GZ_GENERIC_SPAM_5		(__GZ_GENERIC_SPAM_51 || __GZ_GENERIC_SPAM_52 || __GZ_GENERIC_SPAM_53 || __GZ_GENERIC_SPAM_54)
+score		GZ_GENERIC_SPAM_5		3.0
+describe	GZ_GENERIC_SPAM_5		GZ generic spam 5
+
+
+# Generic spam 6
+#
+body		GZ_GENERIC_SPAM_61	/hello (\||l)o(\||l) +\d+/i
+score		GZ_GENERIC_SPAM_61	3.0
+describe	GZ_GENERIC_SPAM_61	GZ generic spam 6
+
+
+# Generic spam 7
+#
+body		__GZ_GENERIC_SPAM_71	/Ho  una sorpresa fantastica  per te/i
+uri			__GZ_GENERIC_SPAM_72	/http:\/\/.*/i
+body		__GZ_GENERIC_SPAM_73	/Errori di battitura .* iPhone/i
+meta		GZ_GENERIC_SPAM_7		(__GZ_GENERIC_SPAM_71 && __GZ_GENERIC_SPAM_72 && __GZ_GENERIC_SPAM_73)
+score		GZ_GENERIC_SPAM_7		8.0
+describe	GZ_GENERIC_SPAM_7		GZ generic spam 7
+
+
+# Generic spam 8
+#
+body		__GZ_GENERIC_SPAM_81	/letto .* buona idea/i
+uri			__GZ_GENERIC_SPAM_82	/http:\/\/.*/i
+body		__GZ_GENERIC_SPAM_83	/(vostro|tuo) business/i
+meta		GZ_GENERIC_SPAM_8		(__GZ_GENERIC_SPAM_81 && __GZ_GENERIC_SPAM_82 && __GZ_GENERIC_SPAM_83)
+score		GZ_GENERIC_SPAM_8		8.0
+describe	GZ_GENERIC_SPAM_8		GZ generic spam 8
+
+
+# Possible subject of invoice spam message - 1
+#
+header		GZ_SUBJECT_INVOICE_SPAM_1		Subject =~ /.* fatt.* [0-9]{6}$/i
+score		GZ_SUBJECT_INVOICE_SPAM_1		3.0
+describe	GZ_SUBJECT_INVOICE_SPAM_1		GZ rule 1 for possible subject of invoice spam
+
+
+# Possible subject of invoice spam message - 2
+#
+header		GZ_SUBJECT_INVOICE_SPAM_2		Subject =~ /.* [0-9]*$/i
+score		GZ_SUBJECT_INVOICE_SPAM_2		1.0
+describe	GZ_SUBJECT_INVOICE_SPAM_2		GZ rule 2 for possible subject of invoice spam
+
+
+# Poste italiane phishing
+#
+header		__GZ_POSTE_ITA_1		Subject =~ /poste utenti informa/i
+body		__GZ_POSTE_ITA_2		/nuova procedura per la verifica/i
+body		__GZ_POSTE_ITA_3		/Per evitare la sospensione del tuo conto/i
+body		__GZ_POSTE_ITA_4		/Clicca sul link e segui le indicazioni/i
+body		__GZ_POSTE_ITA_5		/Poste Online/i
+meta		GZ_POSTE_ITA			(__GZ_POSTE_ITA_1 && __GZ_POSTE_ITA_2 && __GZ_POSTE_ITA_3 && __GZ_POSTE_ITA_4 && __GZ_POSTE_ITA_5)
+score		GZ_POSTE_ITA			5.0
+describe	GZ_POSTE_ITA			GZ poste italiane phishing
+
+
+# Postepay phishing
+#
+header		__GZ_POSTEPAY_1			From =~ /Poste Italiene/i
+header		__GZ_POSTEPAY_2			From =~ /cliente-postepay\.it/i
+header		__GZ_POSTEPAY_3			Subject =~ /Avviso Importante. *Carta Postepay Sospesa/i
+meta		GZ_POSTEPAY				__GZ_POSTEPAY_1 || __GZ_POSTEPAY_2 || __GZ_POSTEPAY_3
+score		GZ_POSTEPAY				6.0
+describe	GZ_POSTEPAY				GZ postepay phishing
+
+
+# Compliant phishing
+#
+header      __GZ_COMPLIANT_1        Subject =~ /Querela per diffamazione aggravata/i
+body        __GZ_COMPLIANT_2        /Con la presente Le scrivo in nome e per conto della mia assistita/i
+body        __GZ_COMPLIANT_3        /atto via social media su Facebook/i
+body        __GZ_COMPLIANT_4        /In allegato \( querela per diffamazione aggravata \)/i
+body        __GZ_COMPLIANT_5        /STUDIO LEGALE/i
+meta		GZ_COMPLIANT_PHISHING   __GZ_COMPLIANT_1 && __GZ_COMPLIANT_2 && __GZ_COMPLIANT_3 && __GZ_COMPLIANT_4 && __GZ_COMPLIANT_5
+score		GZ_COMPLIANT_PHISHING   5.0
+describe    GZ_COMPLIANT_PHISHING   GZ Compliant phishing for italian's country
+
+
+# Payment phishing
+#
+header      __GZ_PAYMENT_R1   Subject =~ /Last WARNING \(.*\)/i
+body        __GZ_PAYMENT_R2   /This is the last warning regarding your debt/i
+body        __GZ_PAYMENT_R3   /full until .* additional fee .* will be applied/i
+body        __GZ_PAYMENT_R4   /More information in the payment notice enclosed/i
+meta        GZ_PAYMENT_PHISHING   __GZ_PAYMENT_R1 && __GZ_PAYMENT_R2 && __GZ_PAYMENT_R3 && __GZ_PAYMENT_R4
+score       GZ_PAYMENT_PHISHING   5.0
+describe    GZ_PAYMENT_PHISHING   GZ payment phishing
+
+
+# Payment ticket phishing
+#
+header      __GZ_FLYTICKET_R1   Subject =~ /flight ticket/i
+body        __GZ_FLYTICKET_R2   /thank.*purchase.*\d*/i
+body        __GZ_FLYTICKET_R3   /received your payment/i
+body        __GZ_FLYTICKET_R4   /information is attached/i
+meta        GZ_FLYTICKET_PHISHING   __GZ_FLYTICKET_R1 && __GZ_FLYTICKET_R2 && __GZ_FLYTICKET_R3 && __GZ_FLYTICKET_R4
+score       GZ_FLYTICKET_PHISHING   5.0
+describe    GZ_FLYTICKET_PHISHING   GZ flight ticket payment phishing
+
+
+# Payment phishing 2
+#
+body		__GZ_PAYMENT2_R1	/SI PREGA DI CONFERMARE IL RICEVIMENTO/i
+body		__GZ_PAYMENT2_R2	/ha effettuato un ordine/i
+body		__GZ_PAYMENT2_R3	/fattura che dovete inviare/i
+body		__GZ_PAYMENT2_R4	/documento fattura.*e-?mail.*Fax.* estremi necessari al pagamento/i
+body		__GZ_PAYMENT2_R5	/IL PAGAMENTO .* LAVORAZIONE MA SOLO PREVIO INVIO/i
+meta		GZ_PAYMENT_2		(__GZ_PAYMENT2_R1 && __GZ_PAYMENT2_R2 && __GZ_PAYMENT2_R3 && __GZ_PAYMENT2_R4 && __GZ_PAYMENT2_R5)
+score		GZ_PAYMENT_2		5.0
+describe	GZ_PAYMENT_2		GZ payment phishing 2
+
+
+# Telepass phishing
+#
+body        __GZ_TELEPASS_R0        /Comunicazione servizio telepass/i
+body        __GZ_TELEPASS_R1        /Gentile Cliente/i
+body        __GZ_TELEPASS_R2        /La inviamo, allegata a questa e-mail, una comunicazione/i
+body        __GZ_TELEPASS_R3        /gestione del contratto Telepass/i
+meta        GZ_TELEPASS_PHISHING    __GZ_TELEPASS_R0 && __GZ_TELEPASS_R2 && __GZ_TELEPASS_R3 && __GZ_TELEPASS_R4
+score       GZ_TELEPASS_PHISHING    5.0
+describe    GZ_TELEPASS_PHISHING    GZ Telepass phishing
+
+
+# Procura italiana phishing
+#
+header      __GZ_PROCURA_ITA_H0       From =~ /Procura della Repubblica/i  
+body        __GZ_PROCURA_ITA_R0       /verranno posti in arresto/i
+body        __GZ_PROCURA_ITA_R1       /prendere visione della causa [0-9]* cliccando sul link/i
+body        __GZ_PROCURA_ITA_R2       /condanna fino a [0-9]* anni di reclusione/i
+body        __GZ_PROCURA_ITA_R3       /Data protection e privacy/i
+body        __GZ_PROCURA_ITA_R4       /arresto entra in vigore/i
+body        __GZ_PROCURA_ITA_R5       /sei sotto inchiesta/i
+meta        GZ_PROCURA_ITA_PHISHING   (__GZ_PROCURA_ITA_H0 && __GZ_PROCURA_ITA_R0 && __GZ_PROCURA_ITA_R1 && __GZ_PROCURA_ITA_R2 && __GZ_PROCURA_ITA_R3) && (__GZ_PROCURA_ITA_R4 || __GZ_PROCURA_ITA_R5)
+score       GZ_PROCURA_ITA_PHISHING   8.0
+describe    GZ_PROCURA_ITA_PHISHING   GZ Procura italiana phishing
+
+
+# Domains blacklist
+#
+body		GZ_DOMAIN_BL		/oferting\.it/i
+score		GZ_DOMAIN_BL		0.11
+describe	GZ_DOMAIN_BL		GZ body contains a domain name used for spamming
+
+
+# Marketing spam
+#
+body		__GZ_MARKETING_1	/(.* +-[0-9]{1,2}% +\|)+/
+header		__GZ_MARKETING_2	List-Unsubscribe =~ /.*/
+header		__GZ_MARKETING_3	Subject =~ /(.* \|)+ .*/i
+header		__GZ_MARKETING_4	From =~ /saldi/i
+body		__GZ_MARKETING_5	/prezzo di listino/i
+body		__GZ_MARKETING_6	/sconto/i
+body		__GZ_MARKETING_7	/risparmio/i
+body		__GZ_MARKETING_8	/il tuo prezzo/i
+body		__GZ_MARKETING_9	/tu(a|o) a *\d*(\.|,)?\d{2}/i
+body		__GZ_MARKETING_10	/compresi/i
+meta		GZ_MARKETING		(((__GZ_MARKETING_1 * 3) + __GZ_MARKETING_2 + (__GZ_MARKETING_3 * 3) + (__GZ_MARKETING_9 * 3) + __GZ_MARKETING_10 + (GZ_DOMAIN_BL * 10)) > 2 ) || (__GZ_MARKETING_5 && __GZ_MARKETING_6 && __GZ_MARKETING_7 && __GZ_MARKETING_8)
+score		GZ_MARKETING		5.0
+describe	GZ_MARKETING		GZ marketing spam
+
+
+# Possible marketing spam
+#
+body		__GZ_MRK_1			/regalo \d* .* buoni acquisto/i
+body		__GZ_MRK_2			/sconti [5,6,7,8,9](0|5) *(%|percento)/i
+body		__GZ_MRK_3			/nuove vendite/i
+body		__GZ_MRK_4			/prestito flessibile/i
+body		__GZ_MRK_5			/zero spese/i
+body		__GZ_MRK_6			/realizza .* desideri/i
+body		__GZ_MRK_7			/Goditi lo sconto del [7,8,9][0-9]% .* prodotti/i
+body		__GZ_MRK_8			/\d{2}\% *OFF for Xmas/i
+body		__GZ_MRK_9			/Solo per OGGI\!? *RISPARMIATE/i
+header		__GZ_MRK_10			Subject =~ /\- \d{2} +percento/i
+meta		GZ_SOFT_MARKETING	((__GZ_MRK_1 + (__GZ_MRK_2 * 2) + __GZ_MRK_3 + __GZ_MRK_4 + __GZ_MRK_5 + __GZ_MRK_6 + __GZ_MRK_7 + (__GZ_MRK_8 *2) + (__GZ_MRK_9 *2) + (__GZ_MRK_10 *2)) > 1) 
+score		GZ_SOFT_MARKETING	2.0
+describe	GZ_SOFT_MARKETING	GZ possible marketing spam
+
+
+# DHL phishing 1
+#
+header		__GZ_DHL_PHISHING1	Subject =~ /Le ultime fatture DHL .* \d*/i
+body		__GZ_DHL_PHISHING2	/la sua fattura in formato PDF .* datata .* un file csv per spedizioni/i
+body		__GZ_DHL_PHISHING3	/Attendiamo di ricevere il pagamento dovuto/i
+body		__GZ_DHL_PHISHING4	/We attempted to deliver.*\(Read.*enclosed file details\)/i
+body		__GZ_DHL_PHISHING5	/The delivery attempt failed/i
+body		__GZ_DHL_PHISHING6	/Label Number: +DHL\d*\w*/i
+body		__GZ_DHL_PHISHING7	/Read the enclosed file for details/i
+meta		GZ_DHL_PHISHING		(__GZ_DHL_PHISHING1 && ( __GZ_DHL_PHISHING2 || __GZ_DHL_PHISHING3)) || ((__GZ_DHL_PHISHING4 || __GZ_DHL_PHISHING5) && __GZ_DHL_PHISHING6 && __GZ_DHL_PHISHING7)
+score		GZ_DHL_PHISHING		5.0
+describe	GZ_DHL_PHISHING		GZ DHL phishing 1
+
+
+# DHL phishing 2
+#
+body		__GZ_DHL2_PHISHING1		/consegna di partenza/i
+body		__GZ_DHL2_PHISHING2		/eccezionale.*seconda consegna/i
+body		__GZ_DHL2_PHISHING3		/la (invitiamo|inviatiamo)/i
+body		__GZ_DHL2_PHISHING4		/compilando il modulo/i
+body		__GZ_DHL2_PHISHING5		/allegato .* lettera/i
+body		__GZ_DHL2_PHISHING6		/DHL/i
+meta		GZ_DHL_PHISHING_2		((__GZ_DHL2_PHISHING1 + __GZ_DHL2_PHISHING2 + (__GZ_DHL2_PHISHING3 * 2) + (__GZ_DHL2_PHISHING4 * 2) + (__GZ_DHL2_PHISHING5 * 2) > 3) && __GZ_DHL2_PHISHING6)
+score		GZ_DHL_PHISHING_2		5.0
+describe	GZ_DHL_PHISHING_2		GZ DHL phishing 2
+
+
+# DHL phishing 3
+#
+header		GZ_DHL_PHISHING_3		Subject =~ /VS SPEDIZIONE DHL AWB [\d,\w]* proveniente dalla GRAN BRETAGNA \**AVVISO DI GIACENZA \**/i
+score		GZ_DHL_PHISHING_3		5.0
+describe	GZ_DHL_PHISHING_3		GZ DHL phishing 3
+
+
+# Order reminder
+#
+header		__GZ_ORDER_REM_1	Subject =~ /reminder (order|ordine)/i
+body		__GZ_ORDER_REM_2	/quotazione.*reminder/i
+body		__GZ_ORDER_REM_3	/pagamento/i
+body		__GZ_ORDER_REM_4	/sinceramente tuo/i
+meta		GZ_ORDER_REMINDER	((__GZ_ORDER_REM_1 + __GZ_ORDER_REM_2 + (__GZ_ORDER_REM_3 * 0.5) + (__GZ_ORDER_REM_4 * 2)) > 3)
+score		GZ_ORDER_REMINDER	6.0
+describe	GZ_ORDER_REMINDER	GZ order reminder spam
+
+
+# Spam message for invasive loan offer
+#
+body		__GZ_LOAN_SPAM_1	/rata base/i
+body		__GZ_LOAN_SPAM_2	/taeg/i
+body		__GZ_LOAN_SPAM_3	/puoi avere/i
+body		__GZ_LOAN_SPAM_4	/prestito flessibile/i
+meta		GZ_LOAN_SPAM		(__GZ_LOAN_SPAM_1 && __GZ_LOAN_SPAM_2 && __GZ_LOAN_SPAM_3 && __GZ_LOAN_SPAM_4)
+score		GZ_LOAN_SPAM		2.0
+describe	GZ_LOAN_SPAM		GZ message of spam for loan offer
+
+
+# Spam message for very invasive loan offer
+#
+meta		GZ_LOAN_VERY_SPAM	(LOTS_OF_MONEY && GZ_LOAN_SPAM)
+score		GZ_LOAN_VERY_SPAM	3.0
+describe	GZ_LOAN_VERY_SPAM	GZ very invasive spam offer
+
+
+# Findomestic spam message
+body		__GZ_FDMT_SPAM_1	/findomestic s\.?p\.?a\.?/i
+meta		GZ_FDMT_SPAM		(__GZ_FDMT_SPAM_1 && (GZ_LOAN_VERY_SPAM || GZ_LOAN_SPAM))
+score		GZ_FDMT_SPAM		6.0
+describe	GZ_FDMT_SPAM		GZ findomestic spam message
+
+
+# Debt spam message
+#
+body		GZ_DEBT_SPAM		/vuoi liberarti dai debiti/i
+score		GZ_DEBT_SPAM		4.0
+describe	GZ_DEBT_SPAM		GZ debt spam message
+
+
+# Unauthorized access
+#
+header		__GZ_UNAUTH_SPAM_1		Subject =~ /unauthorized access/i
+body		__GZ_UNAUTH_SPAM_2		/technical support/i
+body		__GZ_UNAUTH_SPAM_3		/block your account/i
+body		__GZ_UNAUTH_SPAM_4		/instructions .* attachment/i
+meta		GZ_UNAUTH_SPAM			(__GZ_UNAUTH_SPAM_1 && __GZ_UNAUTH_SPAM_2 && __GZ_UNAUTH_SPAM_3 && __GZ_UNAUTH_SPAM_4)
+score		GZ_UNAUTH_SPAM			5.0
+describe	GZ_UNAUTH_SPAM			GZ spam access warning
+
+
+# Virtual card
+#
+body		__GZ_VIRTUAL_CARD_1		/A virtual card you have ordered is now ready but not active/i
+body		__GZ_VIRTUAL_CARD_2		/please open the attached documen/i
+meta		GZ_VIRTUAL_CARD			__GZ_VIRTUAL_CARD_1 && __GZ_VIRTUAL_CARD_2
+score		GZ_VIRTUAL_CARD			10.0
+describe	GZ_VIRTUAL_CARD			GZ virtual card spamming
+
+
+# Domaina greylist
+#
+body		__GZ_DOMAIN_GREY_1		/www\.reteviva\.it/i
+header		__GZ_DOMAIN_GREY_2		From =~ /.*\@reteviva\.it/i
+body		__GZ_DOMAIN_GREY_3		/.*\@reteviva\.it/i
+uri			__GZ_DOMAIN_GREY_4		/http:\/\/www\.setmiami\.com/i
+uri			__GZ_DOMAIN_GREY_5		/http:\/\/develop\.enrollwithabm\.com/i
+meta		GZ_DOMAIN_GREY			(__GZ_DOMAIN_GREY_1 || __GZ_DOMAIN_GREY_2 || __GZ_DOMAIN_GREY_3 || __GZ_DOMAIN_GREY_4 || __GZ_DOMAIN_GREY_5)
+score		GZ_DOMAIN_GREY			5.0
+describe	GZ_DOMAIN_GREY			GZ Domains greylist
