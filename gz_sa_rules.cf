@@ -3,8 +3,8 @@
 #
 # Author...: Giovanni Zavan
 # Contact..: gizeta@programmer.net
-# Date.....: 02/06/2017
-# Version..: 1.0.0.0
+# Date.....: 15/07/2017
+# Version..: 1.0.1.0
 # Note.....: Please note that the rules might not suit your needs and may
 #            create false positive. Please test the rules in your environment
 #            before using them in production.
@@ -12,7 +12,7 @@
 #            in Italy.
 #            You are using these rules at your own risk.
 #------------------------------------------------------------------------------
-version_tag gz_sa_rules_1_0_0_0
+version_tag gz_sa_rules_1_0_1_0
 
 
 # Rule for block invoice's spam message
@@ -232,7 +232,9 @@ body		__GZ_RUSSLAND_DATING1	/Ciao.* (sono|mio nome|mi chiamo) .* (residente|vivo
 body		__GZ_RUSSLAND_DATING2	/Lieta .* (sono|mio nome|mi chiamo) .* (residente|vivo) .* Rus/i
 body		__GZ_RUSSLAND_DATING3	/mi chiamo .* (vivo|residente) .* Rus/i
 body		__GZ_RUSSLAND_DATING4	/My name is .* and I from Russ(ia|land)/i
-meta		GZ_RUSSLAND_DATING		(__GZ_RUSSLAND_DATING1 || __GZ_RUSSLAND_DATING2 || __GZ_RUSSLAND_DATING3 || __GZ_RUSSLAND_DATING4)
+body		__GZ_RUSSLAND_DATING5	/Desperate Russian Girls/i
+body		__GZ_RUSSLAND_DATING6	/Looking for Husbands/i
+meta		GZ_RUSSLAND_DATING		(__GZ_RUSSLAND_DATING1 || __GZ_RUSSLAND_DATING2 || __GZ_RUSSLAND_DATING3 || __GZ_RUSSLAND_DATING4 || __GZ_RUSSLAND_DATING5 || __GZ_RUSSLAND_DATING6)
 score		GZ_RUSSLAND_DATING		5.0
 describe	GZ_RUSSLAND_DATING		GZ High possibility for russian dating message
 
