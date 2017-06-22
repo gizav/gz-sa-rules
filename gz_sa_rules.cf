@@ -3,8 +3,8 @@
 #
 # Author...: Giovanni Zavan
 # Contact..: gizeta@programmer.net
-# Date.....: 15/07/2017
-# Version..: 1.0.1.0
+# Date.....: 23/07/2017
+# Version..: 1.1.0.0
 # Note.....: Please note that the rules might not suit your needs and may
 #            create false positive. Please test the rules in your environment
 #            before using them in production.
@@ -12,7 +12,7 @@
 #            in Italy.
 #            You are using these rules at your own risk.
 #------------------------------------------------------------------------------
-version_tag gz_sa_rules_1_0_1_0
+version_tag gz_sa_rules_1_1_0_0
 
 
 # Rule for block invoice's spam message
@@ -115,7 +115,8 @@ body		__GZ_OBF_TECHNIQUE_14	/\b((I|you).*\$+ex+)\b/i
 body		__GZ_OBF_TECHNIQUE_15	/l0ve|b0dy|h0rny|d00r|h0le/i
 body		__GZ_OBF_TECHNIQUE_16	/(\$|s)e(x|k)h(00|oo)kup/i 
 body		__GZ_OBF_TECHNIQUE_17	/\b((S|\$)ek|\$e+x+|\$e(ss|$$)(o|0)|(\$|S)x{2,}y?)\b/i
-meta		GZ_OBF_TECHNIQUE		(__GZ_OBF_TECHNIQUE_1 || __GZ_OBF_TECHNIQUE_2 || __GZ_OBF_TECHNIQUE_3 || __GZ_OBF_TECHNIQUE_4 || __GZ_OBF_TECHNIQUE_5 || __GZ_OBF_TECHNIQUE_6 || __GZ_OBF_TECHNIQUE_7 || __GZ_OBF_TECHNIQUE_8 || __GZ_OBF_TECHNIQUE_9 || __GZ_OBF_TECHNIQUE_10  || __GZ_OBF_TECHNIQUE_11 || __GZ_OBF_TECHNIQUE_12 || __GZ_OBF_TECHNIQUE_13 || __GZ_OBF_TECHNIQUE_14 || __GZ_OBF_TECHNIQUE_15 || __GZ_OBF_TECHNIQUE_16 || __GZ_OBF_TECHNIQUE_17)
+body		__GZ_OBF_TECHNIQUE_18	/se1fie|ins1de|sti11|rea11y/i
+meta		GZ_OBF_TECHNIQUE		(__GZ_OBF_TECHNIQUE_1 || __GZ_OBF_TECHNIQUE_2 || __GZ_OBF_TECHNIQUE_3 || __GZ_OBF_TECHNIQUE_4 || __GZ_OBF_TECHNIQUE_5 || __GZ_OBF_TECHNIQUE_6 || __GZ_OBF_TECHNIQUE_7 || __GZ_OBF_TECHNIQUE_8 || __GZ_OBF_TECHNIQUE_9 || __GZ_OBF_TECHNIQUE_10  || __GZ_OBF_TECHNIQUE_11 || __GZ_OBF_TECHNIQUE_12 || __GZ_OBF_TECHNIQUE_13 || __GZ_OBF_TECHNIQUE_14 || __GZ_OBF_TECHNIQUE_15 || __GZ_OBF_TECHNIQUE_16 || __GZ_OBF_TECHNIQUE_17 || __GZ_OBF_TECHNIQUE_18)
 score		GZ_OBF_TECHNIQUE		8.0
 describe	GZ_OBF_TECHNIQUE		Obfuscation technique of sex spam
 
@@ -782,6 +783,15 @@ score		GZ_DHL_PHISHING_3		5.0
 describe	GZ_DHL_PHISHING_3		GZ DHL phishing 3
 
 
+# DHL phishing 4
+header		__GZ_DHL4_PHISHING_1	Subject =~ /Informazione DHL Express/i
+body		__GZ_DHL4_PHISHING_2	/in allegato trover(a|à)/i
+body		__GZ_DHL4_PHISHING_3	/per motivi di privacy dovr(a|à) scaricare/i
+meta		GZ_DHL_PHISHING_4		__GZ_DHL4_PHISHING_1 && __GZ_DHL4_PHISHING_2 && __GZ_DHL4_PHISHING_3
+score		GZ_DHL_PHISHING_4		8.0
+describe	GZ_DHL_PHISHING_4		GZ DHL phishing 4
+
+
 # Order reminder
 #
 header		__GZ_ORDER_REM_1	Subject =~ /reminder (order|ordine)/i
@@ -845,13 +855,35 @@ score		GZ_VIRTUAL_CARD			10.0
 describe	GZ_VIRTUAL_CARD			GZ virtual card spamming
 
 
-# Domaina greylist
+# Unicredit phishing
+#
+body		__GZ_UNICR_PHISHING_1	/Ciao/i
+body		__GZ_UNICR_PHISHING_2	/hai ricevuto un messaggio/i
+header		__GZ_UNICR_PHISHING_3	Subject =~ /pid:\d*/i
+body		__GZ_UNICR_PHISHING_4	/continua/i
+meta		GZ_UNICR_PHISHING		__GZ_UNICR_PHISHING_1 && __GZ_UNICR_PHISHING_2 && __GZ_UNICR_PHISHING_3 && __GZ_UNICR_PHISHING_4
+score		GZ_UNICR_PHISHING		8.0
+describe	GZ_UNICR_PHISHING		GZ Unicredit phishing
+
+
+# Scam Domain
+#
+header		__GZ_SCAM_DOMAIN_1		Subject =~ /CN domain and keyword/i
+body		__GZ_SCAM_DOMAIN_2		/domain name registration center in (Shanghai|China|Asia)/i
+body		__GZ_SCAM_DOMAIN_3		/conflict with your company name or trademark/i
+meta		GZ_SCAM_DOMAIN			__GZ_SCAM_DOMAIN_1 && __GZ_SCAM_DOMAIN_2 && __GZ_SCAM_DOMAIN_3
+score		GZ_SCAM_DOMAIN			10.0
+describe	GZ_SCAM_DOMAIN			GZ Scam domain
+
+
+# Domain greylist
 #
 body		__GZ_DOMAIN_GREY_1		/www\.reteviva\.it/i
 header		__GZ_DOMAIN_GREY_2		From =~ /.*\@reteviva\.it/i
 body		__GZ_DOMAIN_GREY_3		/.*\@reteviva\.it/i
 uri			__GZ_DOMAIN_GREY_4		/http:\/\/www\.setmiami\.com/i
 uri			__GZ_DOMAIN_GREY_5		/http:\/\/develop\.enrollwithabm\.com/i
-meta		GZ_DOMAIN_GREY			(__GZ_DOMAIN_GREY_1 || __GZ_DOMAIN_GREY_2 || __GZ_DOMAIN_GREY_3 || __GZ_DOMAIN_GREY_4 || __GZ_DOMAIN_GREY_5)
+uri			__GZ_DOMAIN_GREY_6		/http:\/\/www\.jhlpartners\.com\.au.*/i
+meta		GZ_DOMAIN_GREY			(__GZ_DOMAIN_GREY_1 || __GZ_DOMAIN_GREY_2 || __GZ_DOMAIN_GREY_3 || __GZ_DOMAIN_GREY_4 || __GZ_DOMAIN_GREY_5 || __GZ_DOMAIN_GREY_6)
 score		GZ_DOMAIN_GREY			5.0
 describe	GZ_DOMAIN_GREY			GZ Domains greylist
