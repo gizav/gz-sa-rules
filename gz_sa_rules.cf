@@ -3,8 +3,8 @@
 #
 # Author...: Giovanni Zavan
 # Contact..: gizeta@programmer.net
-# Date.....: 23/07/2017
-# Version..: 1.1.0.0
+# Date.....: 24/07/2017
+# Version..: 1.1.1.0
 # Note.....: Please note that the rules might not suit your needs and may
 #            create false positive. Please test the rules in your environment
 #            before using them in production.
@@ -12,7 +12,7 @@
 #            in Italy.
 #            You are using these rules at your own risk.
 #------------------------------------------------------------------------------
-version_tag gz_sa_rules_1_1_0_0
+version_tag gz_sa_rules_1_1_1_0
 
 
 # Rule for block invoice's spam message
@@ -615,6 +615,13 @@ score		GZ_SUBJECT_INVOICE_SPAM_2		1.0
 describe	GZ_SUBJECT_INVOICE_SPAM_2		GZ rule 2 for possible subject of invoice spam
 
 
+# Invoice message with suspicious attachment
+#
+body		GZ_INVOICE_SPAM			/fattura in formato (XLS|DOC|DOCX)/i
+score		GZ_INVOICE_SPAM			5.0
+describe	GZ_INVOICE_SPAM			Invoice message with suspicious attachment
+
+
 # Poste italiane phishing
 #
 header		__GZ_POSTE_ITA_1		Subject =~ /poste utenti informa/i
@@ -706,13 +713,6 @@ body        __GZ_PROCURA_ITA_R5       /sei sotto inchiesta/i
 meta        GZ_PROCURA_ITA_PHISHING   (__GZ_PROCURA_ITA_H0 && __GZ_PROCURA_ITA_R0 && __GZ_PROCURA_ITA_R1 && __GZ_PROCURA_ITA_R2 && __GZ_PROCURA_ITA_R3) && (__GZ_PROCURA_ITA_R4 || __GZ_PROCURA_ITA_R5)
 score       GZ_PROCURA_ITA_PHISHING   8.0
 describe    GZ_PROCURA_ITA_PHISHING   GZ Procura italiana phishing
-
-
-# Domains blacklist
-#
-body		GZ_DOMAIN_BL		/oferting\.it/i
-score		GZ_DOMAIN_BL		0.11
-describe	GZ_DOMAIN_BL		GZ body contains a domain name used for spamming
 
 
 # Marketing spam
@@ -859,7 +859,7 @@ describe	GZ_VIRTUAL_CARD			GZ virtual card spamming
 #
 body		__GZ_UNICR_PHISHING_1	/Ciao/i
 body		__GZ_UNICR_PHISHING_2	/hai ricevuto un messaggio/i
-header		__GZ_UNICR_PHISHING_3	Subject =~ /pid:\d*/i
+header		__GZ_UNICR_PHISHING_3	Subject =~ /Pi*:\d*/i
 body		__GZ_UNICR_PHISHING_4	/continua/i
 meta		GZ_UNICR_PHISHING		__GZ_UNICR_PHISHING_1 && __GZ_UNICR_PHISHING_2 && __GZ_UNICR_PHISHING_3 && __GZ_UNICR_PHISHING_4
 score		GZ_UNICR_PHISHING		8.0
@@ -876,14 +876,14 @@ score		GZ_SCAM_DOMAIN			10.0
 describe	GZ_SCAM_DOMAIN			GZ Scam domain
 
 
-# Domain greylist
+# URI Domain malware
 #
-body		__GZ_DOMAIN_GREY_1		/www\.reteviva\.it/i
-header		__GZ_DOMAIN_GREY_2		From =~ /.*\@reteviva\.it/i
-body		__GZ_DOMAIN_GREY_3		/.*\@reteviva\.it/i
-uri			__GZ_DOMAIN_GREY_4		/http:\/\/www\.setmiami\.com/i
-uri			__GZ_DOMAIN_GREY_5		/http:\/\/develop\.enrollwithabm\.com/i
-uri			__GZ_DOMAIN_GREY_6		/http:\/\/www\.jhlpartners\.com\.au.*/i
-meta		GZ_DOMAIN_GREY			(__GZ_DOMAIN_GREY_1 || __GZ_DOMAIN_GREY_2 || __GZ_DOMAIN_GREY_3 || __GZ_DOMAIN_GREY_4 || __GZ_DOMAIN_GREY_5 || __GZ_DOMAIN_GREY_6)
-score		GZ_DOMAIN_GREY			5.0
-describe	GZ_DOMAIN_GREY			GZ Domains greylist
+body		__GZ_URI_MLWR_1		/www\.reteviva\.it/i
+header		__GZ_URI_MLWR_2		From =~ /.*\@reteviva\.it/i
+body		__GZ_URI_MLWR_3		/.*\@reteviva\.it/i
+uri			__GZ_URI_MLWR_4		/http:\/\/www\.setmiami\.com/i
+uri			__GZ_URI_MLWR_5		/http:\/\/develop\.enrollwithabm\.com/i
+uri			__GZ_URI_MLWR_6		/http:\/\/www\.jhlpartners\.com\.au.*/i
+meta		GZ_URI_MLWR			(__GZ_DOMAIN_GREY_1 || __GZ_DOMAIN_GREY_2 || __GZ_DOMAIN_GREY_3 || __GZ_DOMAIN_GREY_4 || __GZ_DOMAIN_GREY_5 || __GZ_DOMAIN_GREY_6)
+score		GZ_URI_MLWR			5.0
+describe	GZ_URI_MLWR			GZ URL domains malware
