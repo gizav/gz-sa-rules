@@ -3,8 +3,8 @@
 #
 # Author...: Giovanni Zavan
 # Contact..: gizeta@programmer.net
-# Date.....: 24/07/2017
-# Version..: 1.1.1.0
+# Date.....: 08/07/2017
+# Version..: 1.1.1.1
 # Note.....: Please note that the rules might not suit your needs and may
 #            create false positive. Please test the rules in your environment
 #            before using them in production.
@@ -12,7 +12,7 @@
 #            in Italy.
 #            You are using these rules at your own risk.
 #------------------------------------------------------------------------------
-version_tag gz_sa_rules_1_1_1_0
+version_tag gz_sa_rules_1_1_1_1
 
 
 # Rule for block invoice's spam message
@@ -884,6 +884,6 @@ body		__GZ_URI_MLWR_3		/.*\@reteviva\.it/i
 uri			__GZ_URI_MLWR_4		/http:\/\/www\.setmiami\.com/i
 uri			__GZ_URI_MLWR_5		/http:\/\/develop\.enrollwithabm\.com/i
 uri			__GZ_URI_MLWR_6		/http:\/\/www\.jhlpartners\.com\.au.*/i
-meta		GZ_URI_MLWR			(__GZ_DOMAIN_GREY_1 || __GZ_DOMAIN_GREY_2 || __GZ_DOMAIN_GREY_3 || __GZ_DOMAIN_GREY_4 || __GZ_DOMAIN_GREY_5 || __GZ_DOMAIN_GREY_6)
+meta		GZ_URI_MLWR			(__GZ_URI_MLWR_1 || __GZ_URI_MLWR_2 || __GZ_URI_MLWR_3 || __GZ_URI_MLWR_4 || __GZ_URI_MLWR_5 || __GZ_URI_MLWR_6)
 score		GZ_URI_MLWR			5.0
 describe	GZ_URI_MLWR			GZ URL domains malware
